@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    {% set USD_IMAGE = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQZGZSkki8yc-W_oEbNrCmP0PwjedH6yNj9w&s' %}
+    {% set EUR_IMAGE = 'https://www.shutterstock.com/image-illustration/euro-currency-sign-wireframe-digital-260nw-1349736422.jpg' %}
+    <div id="backdrop"></div>
+    <div class="modal card" id="add-modal">
+        <div class="modal__content">
+            <label for="title">Currency Title</label>
+            <input type="text" name="title" id="title" placeholder="please put currency USD or EUR"/>
+        </div>
+        <div class="modal__actions">
+            <button class="btn btn--passive">Cancel</button>
+            <button class="btn btn--success">Add</button>
+        </div>
+    </div>
+    <div class="modal card" id="delete-modal">
+        <h2 class="modal__title">Are you sure?</h2>
+        <p class="modal__content">
+            Are you sure you want to delete this company? This action can't be made
+            undone!
+        </p>
+        <div class="modal__actions">
+            <button class="btn btn--passive">No (Cancel)</button>
+            <button class="btn btn--danger">Yes</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <h1>Currencies:</h1>
+        <div class='headerBuffer'>
+            <button class="btn" id="add_currency">Add</button>
+        </div>
+    </div>
+
+    <div id="currency_list">
+        <ul class="currency_list">
+            {% for currency in currencies %}
+                <li class="currency_element">
+                    <img src="{{ currency.name == 'USD' ? USD_IMAGE : EUR_IMAGE }}">
+                    <div class="currency_info">
+                        <h2>Title: {{ currency.name }}</h2>
+                        <h3>Price: {{ currency.value }}</h3>
+                    </div>
+                    <div class="controls">
+                        <button data-currency="{{ currency|serialize(format = 'json') }}" class="update_button">Update Price</button>
+                        <button data-currency="{{ currency.id }}" class="delete_button">Delete</button>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+{% endblock %}
+
+{% block stylesheets %}
+
+    <link type="text/css" href="{{ asset('assets/css/company.css') }}" rel="stylesheet" />
+{% endblock %}
+
+{% block javascripts %}
+    {{  parent() }}
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const deleteButtons = document.querySelectorAll('.delete_button');
+
+            const deleteCurrencyProcedure = async (event) => {
+                const currencyData = event.target.getAttribute('data-currency');
+
+                const response = await fetch(`http://localhost:8086/${currencyData}`, { method: 'DELETE' });
+
+                if (response.status === 422 || response.status === 401) {
+                    return null;
+                }
+
+                if (!response.ok) {
+                    return new Response(
+                        JSON.stringify(
+                            {message: 'Can not save a currency on the server!'},
+                            {error: 500}
+                        ),
+                    );
+                } else {
+                    if (response.status === 204) {
+                        event.target.closest('li').remove();
+                    }
+                }
+            }
+
+            for (const deleteButton of deleteButtons) {
+                deleteButton.addEventListener('click', (event) => deleteCurrencyProcedure(event));
+            }
+        });
+    </script>
+{% endblock %}
