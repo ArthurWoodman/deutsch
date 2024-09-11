@@ -1,0 +1,203 @@
+#backdrop {
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 10;
+    pointer-events: none;
+    display: none;
+}
+
+.btn {
+    width: 8rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0.5rem;
+    border-radius: 8px;
+    border: 1px #ccc solid;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.8);
+    cursor: pointer;
+}
+
+.modal__content {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal__content label {
+    margin-left: 1rem;
+    margin-bottom: 0.8rem;
+    font-style: italic;
+}
+
+.modal__content input {
+    width: 98%;
+    max-width: 38.9rem;
+    padding: 0.4rem;
+    border-radius: 8px;
+    border: 1px #ccc solid;
+}
+
+.headerBuffer {
+    width: 98%;
+    border: 1px #ccc solid;
+    border-radius: 12px;
+    display: flex;
+    justify-content: flex-end;
+    height: 3rem;
+    padding: 2px;
+    margin: auto;
+}
+
+.header h1 {
+    display: flex;
+    justify-content: center;
+}
+
+#backdrop.visible {
+    display: block;
+    pointer-events: all;
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+}
+
+.modal {
+    position: fixed;
+    z-index: 100;
+    width: 80%;
+    top: 30vh;
+    border: 1px solid #aaa;
+    box-shadow: 0px 2px 8px rgba(255, 255, 255, 0.9);
+    left: 10%;
+    display: none;
+}
+
+.modal.visible {
+    display: block;
+    animation: fade-slide-in 0.3s ease-out forwards;
+}
+
+.modal .modal__title {
+    margin: 0;
+    padding: 1rem;
+    border-bottom: 1px solid #00329e;
+    background: #00329e;
+    color: white;
+    border-radius: 10px 10px 0 0;
+}
+
+.modal .modal__content {
+    padding: 1rem;
+}
+
+.modal .modal__actions {
+    padding: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+#currency_list {
+    max-width: 40rem;
+    margin: 2rem auto;
+}
+
+.currency_list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    list-style: none;
+}
+
+.currency_list img {
+    width: 50%;
+    overflow: hidden;
+    border-radius: 8px 0 0 8px;
+}
+
+.euro_image {
+    background-image: url('https://www.shutterstock.com/image-illustration/euro-currency-sign-wireframe-digital-260nw-1349736422.jpg');
+    background-size: contain;
+}
+
+.usd_image {
+    background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQZGZSkki8yc-W_oEbNrCmP0PwjedH6yNj9w&s');
+    background-size: contain;
+}
+
+.currency_list li {
+    background-color: #f6f4f4;
+    border-radius: 12px;
+    display: flex;
+}
+
+.currency_list .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.controls button {
+    padding: 0.4rem;
+    width: 8rem;
+    margin-right: 1rem;
+    border-radius: 8px;
+    border: 1px #fff solid;
+    box-shadow: 0px 2px 8px rgb(38 100 172 / 100%);
+    cursor: pointer;
+}
+
+.controls .save_button {
+    background-color: rgb(38 100 172 / 26%);
+}
+
+.controls .update_button {
+    background-color: rgb(38 100 172 / 46%);
+}
+
+.controls .delete_button {
+    background-color: rgb(38 100 172 / 66%);
+}
+
+.currency_info {
+    align-content: center;
+    padding: 2rem;
+    width: 30%;
+}
+
+.currency_element {
+    display: flex;
+}
+
+.currency_element h3 {
+    font-style: italic;
+}
+
+
+@media (min-width: 768px) {
+    .modal {
+        width: 40rem;
+        left: calc(50% - 20rem);
+        height: auto;
+    }
+}
+
+@keyframes fade-slide-in {
+    from {
+        transform: translateY(-5rem);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
