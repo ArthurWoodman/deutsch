@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+  webserver:
+    ports:
+      - "8086:80"
+      - "4436:443"
+  db:
+    ports:
+      - "33066:3306"
+    expose:
+      - "3306"
+
+###> doctrine/doctrine-bundle ###
+  database:
+    ports:
+      - "5432"
+###< doctrine/doctrine-bundle ###
