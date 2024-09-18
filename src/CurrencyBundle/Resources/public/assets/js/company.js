@@ -40,6 +40,24 @@ window.onload = function() {
             return null;
         }
 
+        const handlerClosure = (json) => {
+            const currency = {
+                id: Math.random(),
+                name: title,
+                value: json.cbrf.data[0][json.cbrf.columns.indexOf(`CBRF_${title}_LAST`)],
+                image: title.toLowerCase() == 'usd' ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQZGZSkki8yc-W_oEbNrCmP0PwjedH6yNj9w&s'
+                    : 'https://www.shutterstock.com/image-illustration/euro-currency-sign-wireframe-digital-260nw-1349736422.jpg'
+            }
+
+            renderNewCurrencyElement(currency);
+        }
+
+        callCurrencyAPI(handlerClosure);
+        addModalHideHandler();
+        clearUserInputs();
+    }
+
+    const callCurrencyAPI = (responseHandlerClosure, ...additionalParams) => {
         fetch('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json?iss.meta=off')
             .then((response) => {
                 if (!response.ok) {
@@ -48,22 +66,11 @@ window.onload = function() {
                 return response.json();
             })
             .then((json) => {
-                const currency = {
-                    id: Math.random(),
-                    name: title,
-                    value: json.cbrf.data[0][json.cbrf.columns.indexOf(`CBRF_${title}_LAST`)],
-                    image: title.toLowerCase() == 'usd' ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQZGZSkki8yc-W_oEbNrCmP0PwjedH6yNj9w&s' : 'https://www.shutterstock.com/image-illustration/euro-currency-sign-wireframe-digital-260nw-1349736422.jpg'
-                }
-
-                renderNewCurrencyElement(currency);
+                responseHandlerClosure(json, additionalParams);
             })
             .catch((error) => {
                 console.error(error);
             });
-
-
-        addModalHideHandler();
-        clearUserInputs();
     }
 
     const clearUserInputs = () => {
@@ -126,46 +133,36 @@ window.onload = function() {
     const updateCurrencyProcedure = (currency, button) => {
         // here we need an URL that would be requesting updated data by currency (USD/EUR) but in this test ENV there is NO such API
         // so we make request and if the value is the same I would be adding a random number after a comma for representing purposes
-        fetch('https://iss.moex.com/iss/statistics/engines/currency/markets/selt/rates.json?iss.meta=off')
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('HTTP error, status = ' + response.status);
-                }
+        const responseHandlerClosure = (json, additionalParams) => {
+            const [ currency, button ] = additionalParams;
+            const newValue = json.cbrf.data[0][json.cbrf.columns.indexOf(`CBRF_${currency.name}_LAST`)];
+            const priceNode = button.closest('li').querySelector('h3');
 
-                return response.json();
-            })
-            .then((json) => {
-                const newValue = json.cbrf.data[0][json.cbrf.columns.indexOf(`CBRF_${currency.name}_LAST`)];
-                const priceNode = button.closest('li').querySelector('h3');
+            if (currency.value === newValue) {
+                const newPrice = Math.ceil(currency.value) + Math.random();
+                currency.value = newPrice.toPrecision(6);
+                priceNode.innerHTML = `Price: ${currency.value}`;
+            } else {
+                currency.value = newValue;
+                priceNode.innerHTML = `Price: ${newValue}`;
+            }
 
-                if (currency.value === newValue) {
-                    const newPrice = Math.ceil(currency.value) + Math.random();
-                    currency.value = newPrice.toPrecision(6);
-                    priceNode.innerHTML = `Price: ${currency.value}`;
-                } else {
-                    currency.value = newValue;
-                    priceNode.innerHTML = `Price: ${newValue}`;
-                }
+            if (button.parentNode.children.length < 3) {
+                const updatedCurrency = {...currency, update: 1};
+                const newSaveButton = document.createElement('button');
+                const deleteButton = button.parentNode.children[1];
+                newSaveButton.className = 'save_button';
+                newSaveButton.innerHTML = 'Save to server';
+                newSaveButton.addEventListener('click', saveCurrencyProcedure.bind(null, updatedCurrency, newSaveButton));
+                button.parentNode.prepend(newSaveButton);
+                cloneButton(button, updatedCurrency, updateCurrencyProcedure)
+                cloneButton(deleteButton, updatedCurrency, deleteCurrencyProcedure)
+            } else {
+                cloneButton(button.parentNode.children[0], currency, saveCurrencyProcedure);
+            }
+        }
 
-                if (button.parentNode.children.length < 3) {
-                    const updatedCurrency = {...currency, update: 1};
-                    const newSaveButton = document.createElement('button');
-                    const deleteButton = button.parentNode.children[1];
-                    newSaveButton.className = 'save_button';
-                    newSaveButton.innerHTML = 'Save to server';
-                    newSaveButton.addEventListener('click', saveCurrencyProcedure.bind(null, updatedCurrency, newSaveButton));
-                    button.parentNode.prepend(newSaveButton);
-                    cloneButton(button, updatedCurrency, updateCurrencyProcedure)
-                    cloneButton(deleteButton, updatedCurrency, deleteCurrencyProcedure)
-                } else {
-                    cloneButton(button.parentNode.children[0], currency, saveCurrencyProcedure);
-                }
-            })
-            .catch((error) => {
-                throw new Response(
-                    JSON.stringify({error: error})
-                );
-            });
+        callCurrencyAPI(responseHandlerClosure, currency, button);
     }
 
     const cloneButton = (button, currency, procedure) => {
