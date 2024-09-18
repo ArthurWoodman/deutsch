@@ -62,34 +62,7 @@
     {{  parent() }}
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
-            const deleteButtons = document.querySelectorAll('.delete_button');
 
-            const deleteCurrencyProcedure = async (event) => {
-                const currencyData = event.target.getAttribute('data-currency');
-
-                const response = await fetch(`http://localhost:8086/${currencyData}`, { method: 'DELETE' });
-
-                if (response.status === 422 || response.status === 401) {
-                    return null;
-                }
-
-                if (!response.ok) {
-                    return new Response(
-                        JSON.stringify(
-                            {message: 'Can not save a currency on the server!'},
-                            {error: 500}
-                        ),
-                    );
-                } else {
-                    if (response.status === 204) {
-                        event.target.closest('li').remove();
-                    }
-                }
-            }
-
-            for (const deleteButton of deleteButtons) {
-                deleteButton.addEventListener('click', (event) => deleteCurrencyProcedure(event));
-            }
         });
     </script>
 {% endblock %}

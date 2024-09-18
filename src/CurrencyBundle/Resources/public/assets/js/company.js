@@ -7,7 +7,7 @@ window.onload = function() {
     const closeAddCurrencyButtonClick = addModal.querySelector('.btn--passive');
     const userInputs = addModal.querySelectorAll('input'); // there can be several inputs
     const deleteModal = document.getElementById('delete-modal');
-
+    const deleteButtonsOnLoad = document.querySelectorAll('.delete_button');
     const addCurrencyButtonClickHandler = () => {
         addModal.classList.add('visible');
         toggleBackdrop();
@@ -99,7 +99,7 @@ window.onload = function() {
         const buttons = newEl.querySelectorAll('button');
         buttons[0].addEventListener('click', saveCurrencyProcedure.bind(null, currency, buttons[0]));
         buttons[1].addEventListener('click', updateCurrencyProcedure.bind(null, currency, buttons[1]));
-        buttons[2].addEventListener('click', deleteCurrencyProcedure.bind(null, currency, buttons[2]));
+        buttons[2].addEventListener('click', deleteCurrencyProcedure.bind(null, {currency: currency, button: buttons[2]}));
         currencyList.append(newEl);
     }
 
@@ -156,7 +156,7 @@ window.onload = function() {
                 newSaveButton.addEventListener('click', saveCurrencyProcedure.bind(null, updatedCurrency, newSaveButton));
                 button.parentNode.prepend(newSaveButton);
                 cloneButton(button, updatedCurrency, updateCurrencyProcedure)
-                cloneButton(deleteButton, updatedCurrency, deleteCurrencyProcedure)
+                cloneButton(deleteButton, updatedCurrency, deleteCurrencyProcedure, 1)
             } else {
                 cloneButton(button.parentNode.children[0], currency, saveCurrencyProcedure);
             }
@@ -165,28 +165,43 @@ window.onload = function() {
         callCurrencyAPI(responseHandlerClosure, currency, button);
     }
 
-    const cloneButton = (button, currency, procedure) => {
+    const cloneButton = (button, currency, procedure, objectIsRequired) => {
         const cloneButton = button.cloneNode(true);
-        cloneButton.addEventListener('click', procedure.bind(null, currency, cloneButton));
+        cloneButton.addEventListener(
+            'click',
+            objectIsRequired ? procedure.bind(null, {currency: currency, button: cloneButton})
+                : procedure.bind(null, currency, cloneButton)
+        );
         button.replaceWith(cloneButton);
     }
 
-    const deleteCurrencyProcedure = async (currency, button) => {
-        if (button.parentNode.children.length === 3 && !currency.update) {
-            button.closest('li').remove();
+    const deleteCurrencyProcedure = async (params) => {
+        if (!params.event && params.button.parentNode.children.length === 3 && !params.currency.update) {
+            params.button.closest('li').remove();
 
             return;
         }
 
-        const response = await fetch(`http://localhost:8086/currency`, {
+        let url = 'http://localhost:8086/';
+        let body = null;
+
+        if (!params.event) {
+            url += 'currency';
+            body = JSON.stringify({
+                name: params.currency.name,
+                value: params.currency.value
+            });
+        } else {
+            url += params.event.target.getAttribute('data-currency');
+            params.button = params.event.target;
+        }
+
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'Content-type': 'application/json'
             },
-            body: JSON.stringify({
-                name: currency.name,
-                value: currency.value
-            })
+            body: body
         });
 
         if (response.status === 422 || response.status === 401) {
@@ -202,8 +217,14 @@ window.onload = function() {
             );
         } else {
             if (response.status === 204) {
-                button.closest('li').remove();
+                params.button.closest('li').remove();
             }
+        }
+    }
+
+    if (deleteButtonsOnLoad) {
+        for (const deleteButtonOnLoad of deleteButtonsOnLoad) {
+            deleteButtonOnLoad.addEventListener('click', (event) => deleteCurrencyProcedure({ event: event }));
         }
     }
 
