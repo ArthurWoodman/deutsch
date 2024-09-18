@@ -156,7 +156,7 @@ window.onload = function() {
                 newSaveButton.addEventListener('click', saveCurrencyProcedure.bind(null, updatedCurrency, newSaveButton));
                 button.parentNode.prepend(newSaveButton);
                 cloneButton(button, updatedCurrency, updateCurrencyProcedure)
-                cloneButton(deleteButton, updatedCurrency, deleteCurrencyProcedure, 1)
+                cloneButton(deleteButton, updatedCurrency, deleteCurrencyProcedure)
             } else {
                 cloneButton(button.parentNode.children[0], currency, saveCurrencyProcedure);
             }
@@ -165,19 +165,15 @@ window.onload = function() {
         callCurrencyAPI(responseHandlerClosure, currency, button);
     }
 
-    const cloneButton = (button, currency, procedure, objectIsRequired) => {
+    const cloneButton = (button, currency, procedure) => {
         const cloneButton = button.cloneNode(true);
-        cloneButton.addEventListener(
-            'click',
-            objectIsRequired ? procedure.bind(null, {currency: currency, button: cloneButton})
-                : procedure.bind(null, currency, cloneButton)
-        );
+        cloneButton.addEventListener('click', procedure.bind(null, currency, cloneButton));
         button.replaceWith(cloneButton);
     }
 
-    const deleteCurrencyProcedure = async (params) => {
-        if (!params.event && params.button.parentNode.children.length === 3 && !params.currency.update) {
-            params.button.closest('li').remove();
+    const deleteCurrencyProcedure = async ({currency, button, event}) => {
+        if (button && button.parentNode.children.length === 3 && !currency.update) {
+            button.closest('li').remove();
 
             return;
         }
@@ -185,15 +181,15 @@ window.onload = function() {
         let url = 'http://localhost:8086/';
         let body = null;
 
-        if (!params.event) {
+        if (!event) {
             url += 'currency';
             body = JSON.stringify({
-                name: params.currency.name,
-                value: params.currency.value
+                name: currency.name,
+                value: currency.value
             });
         } else {
-            url += params.event.target.getAttribute('data-currency');
-            params.button = params.event.target;
+            url += event.target.getAttribute('data-currency');
+            button = event.target;
         }
 
         const response = await fetch(url, {
@@ -217,7 +213,7 @@ window.onload = function() {
             );
         } else {
             if (response.status === 204) {
-                params.button.closest('li').remove();
+                button.closest('li').remove();
             }
         }
     }
