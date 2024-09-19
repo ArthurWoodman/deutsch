@@ -8,6 +8,8 @@ window.onload = function() {
     const userInputs = addModal.querySelectorAll('input'); // there can be several inputs
     const deleteModal = document.getElementById('delete-modal');
     const deleteButtonsOnLoad = document.querySelectorAll('.delete_button');
+    const updateButtonsOnLoad = document.querySelectorAll('.update_button');
+
     const addCurrencyButtonClickHandler = () => {
         addModal.classList.add('visible');
         toggleBackdrop();
@@ -97,13 +99,13 @@ window.onload = function() {
         `;
 
         const buttons = newEl.querySelectorAll('button');
-        buttons[0].addEventListener('click', saveCurrencyProcedure.bind(null, currency, buttons[0]));
-        buttons[1].addEventListener('click', updateCurrencyProcedure.bind(null, currency, buttons[1]));
+        buttons[0].addEventListener('click', saveCurrencyProcedure.bind(null, { currency: currency, button: buttons[0] }));
+        buttons[1].addEventListener('click', updateCurrencyProcedure.bind(null, { currency: currency, button: buttons[1] }));
         buttons[2].addEventListener('click', deleteCurrencyProcedure.bind(null, {currency: currency, button: buttons[2]}));
         currencyList.append(newEl);
     }
 
-    const saveCurrencyProcedure = async (currency, button) => {
+    const saveCurrencyProcedure = async ({ currency, button }) => {
         const response = await fetch('http://localhost:8086/', {
             method: currency.update ? 'PATCH' : 'POST',
             headers: {
@@ -130,11 +132,21 @@ window.onload = function() {
         }
     }
 
-    const updateCurrencyProcedure = (currency, button) => {
+    const updateCurrencyProcedure = ({currency, button, event}) => {
         // here we need an URL that would be requesting updated data by currency (USD/EUR) but in this test ENV there is NO such API
         // so we make request and if the value is the same I would be adding a random number after a comma for representing purposes
         const responseHandlerClosure = (json, additionalParams) => {
-            const [ currency, button ] = additionalParams;
+            let [ currency, button, event ] = additionalParams;
+            if (event) {
+                const dataCurrency = JSON.parse(event.target.getAttribute('data-currency'));
+                currency = {
+                    name: dataCurrency.name,
+                    value: dataCurrency.value
+                };
+
+                button = event.target;
+            }
+
             const newValue = json.cbrf.data[0][json.cbrf.columns.indexOf(`CBRF_${currency.name}_LAST`)];
             const priceNode = button.closest('li').querySelector('h3');
 
@@ -162,16 +174,16 @@ window.onload = function() {
             }
         }
 
-        callCurrencyAPI(responseHandlerClosure, currency, button);
+        callCurrencyAPI(responseHandlerClosure, currency, button, event);
     }
 
     const cloneButton = (button, currency, procedure) => {
         const cloneButton = button.cloneNode(true);
-        cloneButton.addEventListener('click', procedure.bind(null, currency, cloneButton));
+        cloneButton.addEventListener('click', procedure.bind(null, { currency: currency, button: cloneButton }));
         button.replaceWith(cloneButton);
     }
 
-    const deleteCurrencyProcedure = async ({currency, button, event}) => {
+    const deleteCurrencyProcedure = async ({ currency, button, event }) => {
         if (button && button.parentNode.children.length === 3 && !currency.update) {
             button.closest('li').remove();
 
@@ -221,6 +233,12 @@ window.onload = function() {
     if (deleteButtonsOnLoad) {
         for (const deleteButtonOnLoad of deleteButtonsOnLoad) {
             deleteButtonOnLoad.addEventListener('click', (event) => deleteCurrencyProcedure({ event: event }));
+        }
+    }
+
+    if (updateButtonsOnLoad) {
+        for (const updateButtonOnLoad of updateButtonsOnLoad) {
+            updateButtonOnLoad.addEventListener('click', (event) => updateCurrencyProcedure({ event: event }));
         }
     }
 
