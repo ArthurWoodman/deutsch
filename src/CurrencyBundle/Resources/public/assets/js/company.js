@@ -165,7 +165,12 @@ window.onload = function() {
                 const deleteButton = button.parentNode.children[1];
                 newSaveButton.className = 'save_button';
                 newSaveButton.innerHTML = 'Save to server';
-                newSaveButton.addEventListener('click', saveCurrencyProcedure.bind(null, updatedCurrency, newSaveButton));
+                newSaveButton.addEventListener('click', saveCurrencyProcedure.bind(null,
+            {
+                        currency: updatedCurrency,
+                        button: newSaveButton
+                    })
+                );
                 button.parentNode.prepend(newSaveButton);
                 cloneButton(button, updatedCurrency, updateCurrencyProcedure)
                 cloneButton(deleteButton, updatedCurrency, deleteCurrencyProcedure)
